@@ -1,6 +1,7 @@
 import { MongoClient } from 'mongodb';
+import dotenv from "dotenv";
 
-require('dotenv').config();
+dotenv.config();
 
 class DBClient {
   constructor() {
