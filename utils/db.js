@@ -1,5 +1,5 @@
 import { MongoClient } from 'mongodb';
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -35,6 +35,28 @@ class DBClient {
 
     const files = await filesCollection.find().toArray();
     return files.length;
+  }
+
+  async findUser(email) {
+    const usersCollection = await this.client.db(this.db).collection('users');
+
+    const user = await usersCollection.findOne({ email });
+
+    return user;
+  }
+
+  async createUser(email, password) {
+    const usersCollection = await this.client.db(this.db).collection('users');
+
+    const user = await usersCollection.insertOne({
+      email,
+      password,
+    });
+
+    return {
+      email,
+      id: user.insertedId,
+    };
   }
 }
 
