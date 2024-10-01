@@ -1,5 +1,6 @@
 import sha1 from 'sha1';
 import dbClient from '../utils/db';
+import redisClient from '../utils/redis';
 
 const postNew = async (req, res) => {
   const { email, password } = req.body;
@@ -22,4 +23,20 @@ const postNew = async (req, res) => {
   return res.status(201).json(user);
 };
 
-export default postNew;
+const getMe = async (req, res) => {
+    const authToken = req.header("X-Token");
+    if (!authToken) {
+        return res.status(401).json({error: "Unauthorized"});
+    }
+
+    const userId = await redisClient.get(`auth_${authToken}`);
+    if (!userId) {
+        return res.status(401).json({error: "Unauthorized"});
+    }
+
+    const user = await dbClient.findUserById(userId);
+
+    return res.status(200).json(user);
+}
+
+export { postNew, getMe };

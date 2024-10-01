@@ -1,4 +1,4 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -37,12 +37,29 @@ class DBClient {
     return files.length;
   }
 
-  async findUser(email) {
+  async findUser(email, password = "") {
     const usersCollection = await this.client.db(this.db).collection('users');
 
-    const user = await usersCollection.findOne({ email });
+    let user;
+    if (!password) {
+        user = await usersCollection.findOne({ email });
+    } else {
+        user = await usersCollection.findOne({ email, password });
+    }
 
     return user;
+  }
+
+  async findUserById(id) {
+    const usersCollection = await this.client.db(this.db).collection('users');
+
+    id = new ObjectId(id)
+    let user = await usersCollection.findOne({ _id: id });
+
+    return {
+        email: user.email,
+        id: user._id
+    };
   }
 
   async createUser(email, password) {
