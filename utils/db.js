@@ -107,6 +107,21 @@ class DBClient {
 
     return files;
   }
+
+  async updateFile(fileId, value) {
+    const filesCollection = await this.client.db(this.db).collection('files');
+
+    const id = new ObjectId(fileId);
+    const file = await filesCollection.updateOne(
+        {_id: id},
+        {$set: { isPublic: value }}
+    )
+
+    const updatedFile = await filesCollection.findOne({ _id: id})
+    return updatedFile;
+  }
+
+
 }
 
 const dbClient = new DBClient();
