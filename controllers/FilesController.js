@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import { v4 } from 'uuid';
 import path from 'path';
+import { ObjectId } from 'mongodb';
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
 
@@ -13,12 +14,12 @@ const postUpload = async (req, res) => {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const userId = await redisClient.get(`auth_${authToken}`);
+  let userId = await redisClient.get(`auth_${authToken}`);
   if (!userId) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  // const user = await dbClient.findUserById(userId);
+  userId = new ObjectId(userId);
 
   const {
     name, type, parentId = 0, isPublic = false, data,
@@ -99,4 +100,49 @@ const postUpload = async (req, res) => {
   });
 };
 
-export { postUpload };
+const getShow = async (req, res) => {
+  const authToken = req.header('X-Token');
+  if (!authToken) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const userId = await redisClient.get(`auth_${authToken}`);
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const fileId = req.params.id;
+  const file = await dbClient.findFileById(fileId, userId);
+
+  if (!file) {
+    return res.status(404).json({ error: 'Not Found' });
+  }
+
+  return res.json(file);
+};
+
+const getIndex = async (req, res) => {
+  const authToken = req.header('X-Token');
+  if (!authToken) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const userId = await redisClient.get(`auth_${authToken}`);
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const parentId = req.query.parentId || 0;
+  const page = parseInt(req.query.page, 10) || 0;
+  const pageSize = 20;
+  const filesToSkip = page * pageSize;
+  const query = {
+    parentId,
+  };
+
+  const files = await dbClient.findFiles(query, pageSize, filesToSkip);
+
+  return res.json(files);
+};
+
+export { postUpload, getShow, getIndex };

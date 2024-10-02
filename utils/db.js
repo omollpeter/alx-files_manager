@@ -37,14 +37,14 @@ class DBClient {
     return files.length;
   }
 
-  async findUser(email, password = "") {
+  async findUser(email, password = '') {
     const usersCollection = await this.client.db(this.db).collection('users');
 
     let user;
     if (!password) {
-        user = await usersCollection.findOne({ email });
+      user = await usersCollection.findOne({ email });
     } else {
-        user = await usersCollection.findOne({ email, password });
+      user = await usersCollection.findOne({ email, password });
     }
 
     return user;
@@ -53,12 +53,12 @@ class DBClient {
   async findUserById(id) {
     const usersCollection = await this.client.db(this.db).collection('users');
 
-    id = new ObjectId(id)
-    let user = await usersCollection.findOne({ _id: id });
+    const userid = new ObjectId(id);
+    const user = await usersCollection.findOne({ _id: userid });
 
     return {
-        email: user.email,
-        id: user._id
+      email: user.email,
+      id: user._id,
     };
   }
 
@@ -76,11 +76,18 @@ class DBClient {
     };
   }
 
-  async findFileById(id) {
+  async findFileById(id, userId = '') {
     const filesCollection = await this.client.db(this.db).collection('files');
 
-    id = new ObjectId(id)
-    let file = await filesCollection.findOne({ _id: id });
+    const fileId = new ObjectId(id);
+    let file;
+
+    if (!userId) {
+      file = await filesCollection.findOne({ _id: fileId });
+    } else {
+      const userid = new ObjectId(userId);
+      file = await filesCollection.findOne({ _id: fileId, userId: userid });
+    }
 
     return file;
   }
@@ -91,6 +98,14 @@ class DBClient {
     const file = await filesCollection.insertOne(details);
 
     return file;
+  }
+
+  async findFiles(queryParam, limit, filesToSkip) {
+    const filesCollection = await this.client.db(this.db).collection('files');
+
+    const files = await filesCollection.find(queryParam).limit(limit).skip(filesToSkip).toArray();
+
+    return files;
   }
 }
 
