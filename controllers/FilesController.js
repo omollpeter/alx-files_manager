@@ -5,6 +5,7 @@ import path from 'path';
 import { ObjectId } from 'mongodb';
 import redisClient from '../utils/redis';
 import dbClient from '../utils/db';
+import mime from "mime-types";
 
 dotenv.config();
 
@@ -57,6 +58,7 @@ const postUpload = async (req, res) => {
       parentId,
       isPublic,
       userId,
+      data
     });
 
     return res.status(201).json({
@@ -87,6 +89,7 @@ const postUpload = async (req, res) => {
     isPublic,
     userId,
     localPath,
+    data
   });
 
   return res.status(201).json({
@@ -191,6 +194,31 @@ const putUnpublish = async (req, res) => {
   return res.json(updatedFile);
 };
 
+const getFile = async (req, res) => {
+  const fileId = req.params.id;
+  const file = await dbClient.findFileById(fileId);
+
+  if (!file) {
+    return res.status(404).json({ error: 'Not Found' });
+  }
+
+  if (!(file.isPublic && file.userId)) {
+    return res.status(404).json({error: "Not Found"})
+  }
+
+  if(file.type === "folder") {
+    return res.status(400).json({error: "A folder doesn't have content"})
+  }
+
+  fs.readFile(file.localPath, "utf-8", (err, data) => {
+    if (err) return res.status(404).json({error: "Not Found"});
+
+    const mime1 = mime.lookup(file.name);
+    res.setHeader("Content-Type", mime1)
+    res.send(data);
+  })
+}
+
 export {
-  postUpload, getShow, getIndex, putPublish, putUnpublish,
+  postUpload, getShow, getIndex, putPublish, putUnpublish, getFile
 };

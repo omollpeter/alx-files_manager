@@ -40,4 +40,6 @@ class RedisClient {
 
 const redisClient = new RedisClient();
 
+console.log(redisClient.isAlive())
+
 export default redisClient;
