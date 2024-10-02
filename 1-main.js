@@ -1,4 +1,4 @@
-import dbClient from './utils/db';
+import dbClient from './try-mongo';
 
 const waitConnection = () => new Promise((resolve, reject) => {
   let i = 0;
