@@ -75,6 +75,23 @@ class DBClient {
       id: user.insertedId,
     };
   }
+
+  async findFileById(id) {
+    const filesCollection = await this.client.db(this.db).collection('files');
+
+    id = new ObjectId(id)
+    let file = await filesCollection.findOne({ _id: id });
+
+    return file;
+  }
+
+  async createFile(details) {
+    const filesCollection = await this.client.db(this.db).collection('files');
+
+    const file = await filesCollection.insertOne(details);
+
+    return file;
+  }
 }
 
 const dbClient = new DBClient();
